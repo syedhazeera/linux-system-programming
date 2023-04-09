@@ -1,0 +1,47 @@
+5. pipes
+
+//pipes.h
+
+#include<sys/types.h>
+#include<stdio.h>
+#include<string.h>
+#include<unistd.h>
+ 
+#define BUFFER_SIZE 25
+#define READ_END 0
+#define WRITE_END 1
+
+//pipes.c
+
+int main(void)
+{
+	char write_msg[BUFFER_SIZE] = "Hello World";
+	char read_msg[BUFFER_SIZE];
+	int fd[2];
+	int pid;
+	if(pipe(fd) == -1)			//create the pipe
+	{
+		fprintf(stderr,"pipe failed");
+		return 1;
+	}
+	pid = fork();		//fork a child process
+	if(pid<0)		//error occured
+	{
+		fprintf(stderr,"fork failed");
+		return 1;
+	}
+	if(pid>0)
+	{		//parent process
+		close(fd[READ_END]);		// close the unused end of the pipe
+		write(fd[WRITE_END],write_msg,strlen(write_msg)+1); 	//write to the pipe
+		close(fd[WRITE_END]);		//Close the write end of pipe
+	}
+	else
+	{			// child process
+		close(fd[WRITE_END]);		//close the unused end of the pipe
+		read(fd[READ_END],read_msg,BUFFER_SIZE); 	//Read from the pipe
+		close(fd[READ_END]);		//Close the read end of the pipe
+	}
+	return 0;
+}
+	
