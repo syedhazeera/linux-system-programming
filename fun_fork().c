@@ -15,5 +15,12 @@ return 0;
 }
 
 /*output:
+LENOVO@DESKTOP-KCFUUP4 ~/linux
+$ gcc fork.c -o fork
+
+LENOVO@DESKTOP-KCFUUP4 ~/linux
+$ ./fork
+hii im parent process
+hii im child process
 
 */
