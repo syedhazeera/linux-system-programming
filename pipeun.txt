@@ -1,0 +1,134 @@
+//program using fifo reader and fifo writer using pipe 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h> 
+#include <unistd.h>
+#include <time.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#define MaxLoops         12000   /* outer loop */
+#define ChunkSize           16   /* how many written at a time */
+#define IntsPerChunk         4   /* four 4-byte ints per chunk */
+#define MaxZs              250   /* max microseconds to sleep */
+
+int main() {
+  const char* pipeName = "./fifoChannel";
+  mkfifo(pipeName, 0666);                      /* read/write for user/group/others */
+  int fd = open(pipeName, O_CREAT | O_WRONLY); /* open as write-only */
+  if (fd < 0) return -1;                       /** error **/
+  
+  int i;
+  for (i = 0; i < MaxLoops; i++) {          /* write MaxWrites times */
+    int j;
+    for (j = 0; j < ChunkSize; j++) {       /* each time, write ChunkSize bytes */
+      int k;
+      int chunk[IntsPerChunk];
+      for (k = 0; k < IntsPerChunk; k++) 
+	chunk[k] = rand();             
+      write(fd, chunk, sizeof(chunk)); 
+    }
+    usleep((rand() % MaxZs) + 1);           /* pause a bit for realism */
+  }
+
+  close(fd);                                /* close pipe: generates an end-of-file */
+  unlink(pipeName);                         /* unlink from the implementing file */
+  printf("%i ints sent to the pipe.\n", MaxLoops * ChunkSize * IntsPerChunk);
+
+  return 0;
+}
+---------------------------------------------
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+
+unsigned is_prime(unsigned n) { /* not pretty, but gets the job done efficiently */
+  if (n <= 3) return n > 1;
+  if (0 == (n % 2) || 0 == (n % 3)) return 0;
+
+  unsigned i;
+  for (i = 5; (i * i) <= n; i += 6) 
+    if (0 == (n % i) || 0 == (n % (i + 2))) return 0;
+
+  return 1; /* found a prime! */
+}
+
+int main() {
+  const char* file = "./fifoChannel";
+  int fd = open(file, O_RDONLY); 
+  if (fd < 0) return -1; /* no point in continuing */
+  unsigned count = 0, total = 0, primes_count = 0;
+
+  while (1) {
+    int next;
+    int i;
+    ssize_t count = read(fd, &next, sizeof(int));   
+
+    if (0 == count) break;                  /* end of stream */
+    else if (count == sizeof(int)) {        /* read a 4-byte int value */
+      total++;
+      if (is_prime(next)) primes_count++;
+    }   
+  }
+
+  close(fd);       /* close pipe from read end */
+  unlink(file);    /* unlink from the underlying file */
+  printf("Received ints: %u, primes: %u\n", total, primes_count);  
+
+  return 0;
+}
+------------------------------------------------------------
+#include <sys/wait.h> /* wait */
+#include <stdio.h>
+#include <stdlib.h>   /* exit functions */
+#include <unistd.h>   /* read, write, pipe, _exit */
+#include <string.h>
+
+#define ReadEnd  0
+#define WriteEnd 1
+
+void report_and_exit(const char* msg) {
+  perror(msg);
+  exit(-1);    /** failure **/
+}
+
+int main() {
+  int pipeFDs[2]; /* two file descriptors */
+  char buf;       /* 1-byte buffer */
+  const char* msg = "Nature's first green is gold\n"; /* bytes to write */
+
+  if (pipe(pipeFDs) < 0) report_and_exit("pipeFD");
+  pid_t cpid = fork();                                /* fork a child process */
+  if (cpid < 0) report_and_exit("fork");              /* check for failure */
+
+  if (0 == cpid) {    /*** child ***/                 /* child process */
+    close(pipeFDs[WriteEnd]);                         /* child reads, doesn't write */
+
+    while (read(pipeFDs[ReadEnd], &buf, 1) > 0)       /* read until end of byte stream */
+      write(STDOUT_FILENO, &buf, sizeof(buf));        /* echo to the standard output */
+
+    close(pipeFDs[ReadEnd]);                          /* close the ReadEnd: all done */
+    _exit(0);                                         /* exit and notify parent at once  */
+  }
+  else {              /*** parent ***/
+    close(pipeFDs[ReadEnd]);                          /* parent writes, doesn't read */
+
+    write(pipeFDs[WriteEnd], msg, strlen(msg));       /* write the bytes to the pipe */
+    close(pipeFDs[WriteEnd]);                         /* done writing: generate eof */
+
+    wait(NULL);                                       /* wait for child to exit */
+    exit(0);                                          /* exit normally */
+  }
+  return 0;
+}
+
+/*output:
+syed@syed-VirtualBox:~/Desktop/linux$ gcc -o fifo_writer fifo_writer.c -lrt -lpthread
+syed@syed-VirtualBox:~/Desktop/linux$ gcc -o fifo_reader fifo_reader.c -lrt -lpthread
+syed@syed-VirtualBox:~/Desktop/linux$ gcc -o pipeun pipeun.c -lrt -lpthread
+syed@syed-VirtualBox:~/Desktop/linux$ ./pipeun
+Nature's first green is gold
+*/
