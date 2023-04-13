@@ -136,3 +136,8 @@ int main() {
   return 0;
 }
 
+/*output:
+syed@syed-VirtualBox:~/Desktop/linux$ gcc -o client client.c -lrt -lpthread
+syed@syed-VirtualBox:~/Desktop/linux$ gcc -o server server.c -lrt -lpthread
+syed@syed-VirtualBox:~/Desktop/linux$ ./server
+Listening on port 9876 for clients...*/
