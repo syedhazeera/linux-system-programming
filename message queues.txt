@@ -85,3 +85,21 @@ int main() {
   return 0;
 }
 
+/*output:
+syed@syed-VirtualBox:~/Desktop/linux$ vim receiver.c
+syed@syed-VirtualBox:~/Desktop/linux$ gcc -o sender sender.c -lrt -lpthread
+syed@syed-VirtualBox:~/Desktop/linux$ gcc -o receiver receiver.c -lrt -lpthread
+syed@syed-VirtualBox:~/Desktop/linux$ ./sender
+msg1 sent as type 1
+msg2 sent as type 1
+msg3 sent as type 2
+msg4 sent as type 2
+msg5 sent as type 3
+msg6 sent as type 3
+syed@syed-VirtualBox:~/Desktop/linux$ ./receiver
+msg5 received as type 3
+msg1 received as type 1
+msg3 received as type 2
+msg2 received as type 1
+msg6 received as type 3
+msg4 received as type 2*/
