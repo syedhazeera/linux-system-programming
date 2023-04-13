@@ -122,3 +122,9 @@ int main() {
   return 0;
 }
 
+/*output:
+syed@syed-VirtualBox:~/Desktop/linux$ gcc -o memwriter memwriter.c -lrt -lpthread
+syed@syed-VirtualBox:~/Desktop/linux$ gcc -o memreader memreader.c -lrt -lpthread
+syed@syed-VirtualBox:~/Desktop/linux$ ./memwriter
+shared mem address: 0x7fe4fa429000 [0..511]
+backing file:       /dev/shm/shMemEx*/
