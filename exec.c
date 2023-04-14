@@ -11,6 +11,15 @@ int main(int argc, char *argv[])
 }
 
 /*output:
-PID of ex1.c = 61008
-back to ex1.c
+$ gcc exec.c -o exec
+$ gcc ex2.c -o ex2
+$ ./exec
+PID of ex1.c = 903
+we are in ex2.c
+PID of ex2.c = 903
+
+$ ./ex2
+we are in ex2.c
+PID of ex2.c = 904
+
 */
