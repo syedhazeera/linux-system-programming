@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include <fcntl.h>
+#include<stdlib.h>
 int main()
 {
     int fd1 = open("foo.txt", O_RDONLY);
